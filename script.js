@@ -290,9 +290,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Generate a recipe-accurate image using Google Imagen 4.0 Fast API
+    async function fetchRecipeImage(imagePromptKeywords) {
+        const promptAdditions = ", professional food photography, 4k, masterpiece, highly detailed, appetizing, top down shot";
+        const fullPrompt = imagePromptKeywords + promptAdditions;
+
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-fast-generate-001:predict?key=${state.apiKey}`;
+        const requestBody = {
+            instances: [{ prompt: fullPrompt }],
+            parameters: { sampleCount: 1, aspectRatio: "4:3" }
+        };
+
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+            throw new Error('Image generation failed');
+        }
+
+        const data = await response.json();
+        if (data.predictions && data.predictions[0] && data.predictions[0].bytesBase64Encoded) {
+            const mimeType = data.predictions[0].mimeType || 'image/png';
+            return `data:${mimeType};base64,${data.predictions[0].bytesBase64Encoded}`;
+        }
+        throw new Error('No image data in response');
+    }
+
     function renderRecipe(recipes) {
         const container = document.getElementById('recipesContainer');
-        const template = document.getElementById('recipeCardTemplate');
 
         // Hide the single old result box if it still exists in DOM state somehow
         const oldResultBox = document.getElementById('resultBox');
@@ -303,21 +331,16 @@ document.addEventListener('DOMContentLoaded', () => {
         container.classList.remove('hidden');
 
         recipes.forEach((recipe, index) => {
-            // Pollinations is currently down (530 error). Using beautiful food-related placeholders via LoremFlickr instead.
-            // Using a specific food query and a random number to avoid exact duplicates
-            const seed = Math.floor(Math.random() * 1000) + 1;
-            const imageUrl = `https://loremflickr.com/800/600/food?lock=${seed}`;
-
             const ingredientsHtml = recipe.ingredients.map(ing => `<li>${ing}</li>`).join('');
             const stepsHtml = recipe.steps.map(step => `<li class="pl-1 pb-2 border-b border-gray-100 last:border-0"><span class="leading-relaxed">${step}</span></li>`).join('');
 
             const cardHtml = `
                 <div class="recipe-card bg-white rounded-2xl shadow-xl overflow-hidden border border-orange-50 mb-8">
                     <div class="relative w-full h-64 bg-gray-100 flex items-center justify-center overflow-hidden group">
-                        <img class="recipeImage w-full h-full object-cover hidden transition-all duration-700 opacity-0 group-hover:scale-105" src="${imageUrl}" alt="Recipe Image">
+                        <img class="recipeImage w-full h-full object-cover hidden transition-all duration-700 opacity-0 group-hover:scale-105" src="" alt="Recipe Image">
                         <div class="imageLoading absolute inset-0 flex flex-col items-center justify-center text-gray-400 gap-2">
                             <i class="fas fa-camera text-4xl mb-2 animate-pulse text-orange-200"></i>
-                            <span class="text-xs font-medium text-gray-400">写真を生成中...</span>
+                            <span class="text-xs font-medium text-gray-400">AIが料理写真を生成中...</span>
                         </div>
                         <div class="absolute top-4 left-4 bg-orange-500 text-white font-bold py-1 px-3 rounded-full shadow-md text-sm">
                             候補 ${index + 1}
@@ -351,23 +374,26 @@ document.addEventListener('DOMContentLoaded', () => {
             wrapper.innerHTML = cardHtml;
             container.appendChild(wrapper);
 
-            // Handle Image loading visually
+            // Handle Image loading visually using Imagen 4.0 Fast API
             const newCard = container.lastElementChild;
             const recipeImageElem = newCard.querySelector('.recipeImage');
             const imageLoadingElem = newCard.querySelector('.imageLoading');
 
-            const imgPreloader = new Image();
-            imgPreloader.onload = () => {
-                imageLoadingElem.classList.add('hidden');
-                recipeImageElem.classList.remove('hidden');
-                void recipeImageElem.offsetWidth;
-                recipeImageElem.classList.remove('opacity-0');
-                recipeImageElem.classList.add('opacity-100');
-            };
-            imgPreloader.onerror = () => {
-                imageLoadingElem.innerHTML = '<span class="text-xs text-red-400">画像の生成に失敗しました</span>';
-            };
-            imgPreloader.src = imageUrl;
+            // Fire off the Imagen API call asynchronously for each card
+            fetchRecipeImage(recipe.imagePromptKeywords)
+                .then(dataUrl => {
+                    recipeImageElem.src = dataUrl;
+                    imageLoadingElem.classList.add('hidden');
+                    recipeImageElem.classList.remove('hidden');
+                    void recipeImageElem.offsetWidth;
+                    recipeImageElem.classList.remove('opacity-0');
+                    recipeImageElem.classList.add('opacity-100');
+                })
+                .catch(err => {
+                    console.error('Image generation error:', err);
+                    imageLoadingElem.innerHTML = '<span class="text-xs text-red-400">画像の生成に失敗しました</span>';
+                });
         });
     }
 });
+
