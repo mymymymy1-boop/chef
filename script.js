@@ -233,18 +233,13 @@ document.addEventListener('DOMContentLoaded', () => {
   "imagePromptKeywords": "画像生成AI用の単語の羅列（英語）。例: delicious Japanese food, highly detailed, food photography, masterpiece, vibrant colors"
 }`;
 
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${state.apiKey}`;
-
         const requestBody = {
-            contents: [{
-                parts: [{ text: systemPrompt }]
-            }],
-            generationConfig: {
-                temperature: 0.7,
-                responseMimeType: "application/json" // Force JSON output in Gemini
-            }
+            contents: [{ parts: [{ text: systemPrompt }] }],
+            generationConfig: { temperature: 0.7, responseMimeType: "application/json" }
         };
 
+        // We know gemini-2.5-flash is available for this account based on ListModels
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${state.apiKey}`;
         const response = await fetch(apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -257,8 +252,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const errorData = await response.json();
                 console.error("Gemini API Error Response:", errorData);
                 errorMsg = errorData.error?.message || errorMsg;
-                if (errorData.error?.status === 'INVALID_ARGUMENT') {
-                    errorMsg = 'API Keyが無効です。設定から正しいキーを入力し直してください。';
+                if (errorData.error?.status === 'INVALID_ARGUMENT' || errorData.error?.code === 400) {
+                    errorMsg = 'API Keyが無効であるか、形式が間違っています。設定から正しいキーを入力し直してください。（スペースが含まれていないか等）';
                 }
             } catch (e) {
                 console.error("Could not parse error response", e);
