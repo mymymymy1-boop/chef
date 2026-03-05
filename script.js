@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // State
     let state = {
-        apiKey: localStorage.getItem('gemini_api_key') || '',
+        apiKey: localStorage.getItem('gemini_api_key') || 'AIzaSyA7AFu11xmqnUyGdUmdqITDzIsy2Z7AHu4',
         isRecording: false,
         selectedMood: null,
         recognition: null
