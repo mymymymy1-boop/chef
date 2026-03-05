@@ -1,0 +1,124 @@
+/* Custom Animations and Utilities */
+
+/* Mic Recording Pulse Animation */
+@keyframes pulse-ring {
+    0% {
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
+
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+.mic-recording #micBtn {
+    background-color: #feebc8;
+    /* orange-200 */
+    color: #c05621;
+    /* orange-700 */
+    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+}
+
+.mic-recording #micRipple {
+    animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+/* Mood Button Active State */
+.mood-btn.active {
+    border-color: #f6ad55;
+    /* orange-400 */
+    background-color: #fffaf0;
+    /* orange-50 */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transform: translateY(-2px);
+}
+
+.mood-btn.active span:first-child {
+    transform: scale(1.1);
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Slide Up Animation for Output Section */
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.slide-up {
+    animation: slideUp 0.5s ease-out forwards;
+}
+
+/* Modal Animations */
+#settingsModal.show {
+    display: flex;
+    opacity: 1;
+}
+
+#settingsModal.show>div {
+    transform: scale(1);
+}
+
+/* Toast Animations */
+#toast.show {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
+
+/* Cooking Spinner */
+@keyframes flip {
+    0% {
+        transform: scaleX(1) translateY(0);
+    }
+
+    50% {
+        transform: scaleX(-1) translateY(-10px);
+    }
+
+    100% {
+        transform: scaleX(1) translateY(0);
+    }
+}
+
+@keyframes bounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+.cooking-spinner {
+    display: inline-block;
+    animation: flip 1.5s infinite cubic-bezier(0.455, 0.03, 0.515, 0.955);
+}
+
+/* Base custom scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #cbd5e1;
+}

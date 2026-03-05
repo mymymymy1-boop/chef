@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>今夜のパパッと献立くん 🍳</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col pt-16">
+    <!-- Header -->
+    <header class="fixed top-0 left-0 right-0 bg-white shadow-sm z-50 h-16 flex items-center justify-between px-4">
+        <h1 class="text-xl font-bold text-orange-500 tracking-tight">今夜のパパッと献立くん <span class="text-2xl">🍳</span></h1>
+        <button id="settingsBtn" class="text-gray-500 hover:text-orange-500 transition-colors p-2">
+            <i class="fas fa-cog text-xl"></i>
+        </button>
+    </header>
+
+    <main class="flex-grow container mx-auto max-w-md px-4 py-6 flex flex-col gap-8">
+        <!-- Voice Input Section -->
+        <section class="bg-white rounded-2xl shadow-sm p-6 flex flex-col items-center gap-4 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-400 to-orange-500"></div>
+            <h2 class="text-lg font-bold text-gray-700 w-full text-center">冷蔵庫にある（気がする）ものを話してね</h2>
+
+            <button id="micBtn"
+                class="w-24 h-24 rounded-full bg-orange-100 text-orange-500 flex items-center justify-center shadow-inner transition-all duration-300 relative group">
+                <div id="micRipple" class="absolute inset-0 rounded-full border border-orange-400 opacity-0 scale-50">
+                </div>
+                <i class="fas fa-microphone text-4xl relative z-10 group-hover:scale-110 transition-transform"></i>
+            </button>
+            <p id="micStatus" class="text-sm text-gray-500 h-5">タップして話す</p>
+
+            <textarea id="ingredientsInput"
+                class="w-full mt-2 p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all resize-none text-gray-700 bg-gray-50/50"
+                rows="3" placeholder="（例：豚肉、玉ねぎ、少ししなびたピーマン...）"></textarea>
+        </section>
+
+        <!-- Mood Selection Section -->
+        <section class="flex flex-col gap-3">
+            <h2 class="text-lg font-bold text-gray-700 px-1">今の気分は？</h2>
+            <div class="grid grid-cols-2 gap-3" id="moodGrid">
+                <button type="button"
+                    class="mood-btn flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-gray-200 bg-white transition-all shadow-sm hover:shadow-md hover:border-orange-200"
+                    data-mood="10分以内で作れる爆速料理">
+                    <span class="text-3xl">🏃</span>
+                    <span class="font-bold text-sm text-gray-700">爆速！</span>
+                    <span class="text-xs text-gray-500">10分以内</span>
+                </button>
+                <button type="button"
+                    class="mood-btn flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-gray-200 bg-white transition-all shadow-sm hover:shadow-md hover:border-orange-200"
+                    data-mood="野菜たっぷりのヘルシー料理">
+                    <span class="text-3xl">🥦</span>
+                    <span class="font-bold text-sm text-gray-700">ヘルシー</span>
+                    <span class="text-xs text-gray-500">野菜たっぷり</span>
+                </button>
+                <button type="button"
+                    class="mood-btn flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-gray-200 bg-white transition-all shadow-sm hover:shadow-md hover:border-orange-200"
+                    data-mood="白米が進むガッツリ系の料理">
+                    <span class="text-3xl">🍖</span>
+                    <span class="font-bold text-sm text-gray-700">ガッツリ</span>
+                    <span class="text-xs text-gray-500">白米泥棒</span>
+                </button>
+                <button type="button"
+                    class="mood-btn flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-gray-200 bg-white transition-all shadow-sm hover:shadow-md hover:border-orange-200"
+                    data-mood="お酒に合うおつまみ系の料理">
+                    <span class="text-3xl">🍺</span>
+                    <span class="font-bold text-sm text-gray-700">おつまみ</span>
+                    <span class="text-xs text-gray-500">お酒に合う</span>
+                </button>
+                <button type="button"
+                    class="mood-btn flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-gray-200 bg-white transition-all shadow-sm hover:shadow-md hover:border-orange-200"
+                    data-mood="5歳の子どもが好む、少し甘めで食べやすいサイズ・味付けの料理">
+                    <span class="text-3xl relative">🧒<span class="absolute -top-1 -right-2 text-xs">✨</span></span>
+                    <span class="font-bold text-sm text-gray-700">子供大好き</span>
+                    <span class="text-xs text-gray-500">5歳児向け</span>
+                </button>
+                <button type="button"
+                    class="mood-btn flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-gray-200 bg-white transition-all shadow-sm hover:shadow-md hover:border-orange-200"
+                    data-mood="余っている調味料や具材をフルに活用した在庫一掃の自炊料理">
+                    <span class="text-3xl">🧊</span>
+                    <span class="font-bold text-sm text-gray-700">在庫一掃</span>
+                    <span class="text-xs text-gray-500">調味料をフル活用</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Generate Button -->
+        <button id="generateBtn"
+            class="w-full bg-gradient-to-r from-orange-500 to-orange-400 hover:from-orange-600 hover:to-orange-500 text-white font-bold py-4 px-6 rounded-2xl shadow-lg transition-all transform active:scale-95 flex justify-center items-center gap-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed group">
+            <span>今夜の夕食を考える！</span>
+            <i class="fas fa-magic group-hover:rotate-12 transition-transform"></i>
+        </button>
+
+        <!-- Output Section (Hidden by default) -->
+        <section id="outputSection" class="hidden flex-col gap-6 mt-2 pb-8 slide-up">
+            <!-- Loading State -->
+            <div id="loadingIndicator" class="hidden flex-col items-center justify-center py-10 gap-4">
+                <div class="cooking-spinner text-5xl">🍳</div>
+                <p class="text-orange-500 font-bold animate-pulse text-lg tracking-wide">考案中...</p>
+                <p class="text-xs text-gray-400">三橋家のシェフが腕を振るっています</p>
+            </div>
+
+            <!-- Result Box -->
+            <div id="resultBox" class="hidden bg-white rounded-2xl shadow-xl overflow-hidden border border-orange-50">
+                <!-- Image Container -->
+                <div class="relative w-full h-64 bg-gray-100 flex items-center justify-center overflow-hidden group">
+                    <img id="recipeImage" src="" alt="Recipe Image"
+                        class="w-full h-full object-cover hidden transition-all duration-700 opacity-0 group-hover:scale-105">
+                    <div id="imageLoading"
+                        class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 gap-2">
+                        <i class="fas fa-camera text-4xl mb-2 animate-pulse text-orange-200"></i>
+                        <span class="text-xs font-medium text-gray-400">写真を生成中...</span>
+                    </div>
+                </div>
+
+                <!-- Recipe Content -->
+                <div class="p-6 flex flex-col gap-6">
+                    <h2 id="recipeTitle" class="text-2xl font-bold text-gray-800 leading-tight"></h2>
+
+                    <div class="bg-orange-50/50 rounded-xl p-4">
+                        <h3 class="flex items-center gap-2 text-orange-600 font-bold mb-3">
+                            <i class="fas fa-shopping-basket"></i> 材料
+                        </h3>
+                        <ul id="recipeIngredients"
+                            class="list-disc list-inside text-gray-700 text-sm flex flex-col gap-2 pl-1 marker:text-orange-400">
+                            <!-- Injected dynamically -->
+                        </ul>
+                    </div>
+
+                    <div class="px-2">
+                        <h3 class="flex items-center gap-2 text-orange-600 font-bold mb-3">
+                            <i class="fas fa-list-ol"></i> 手順
+                        </h3>
+                        <ol id="recipeSteps"
+                            class="list-decimal list-outside text-gray-700 text-sm flex flex-col gap-4 pl-5 marker:font-bold marker:text-orange-400">
+                            <!-- Injected dynamically -->
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- API Key Settings Modal -->
+    <div id="settingsModal"
+        class="fixed inset-0 bg-gray-900/60 z-[100] hidden items-center justify-center p-4 backdrop-blur-sm transition-opacity opacity-0">
+        <div
+            class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform scale-95 transition-transform duration-300">
+            <div class="bg-gray-50 border-b border-gray-100 px-6 py-4 flex justify-between items-center">
+                <h3 class="font-bold text-gray-800 flex items-center gap-2"><i class="fas fa-key text-orange-400"></i>
+                    API設定</h3>
+                <button id="closeSettingsBtn"
+                    class="text-gray-400 hover:text-gray-600 transition-colors w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <p class="text-sm text-gray-600 mb-5 leading-relaxed">AIに献立を考えてもらうには、Googleの<span
+                        class="font-bold text-orange-500">Gemini 1.5 Flash</span>に対応したAPI Keyが必要です。</p>
+                <div class="mb-5">
+                    <label class="block text-xs font-bold text-gray-500 mb-2" for="apiKeyInput">Gemini API Key</label>
+                    <input type="password" id="apiKeyInput"
+                        class="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all shadow-sm"
+                        placeholder="AIzA...">
+                </div>
+                <button id="saveKeyBtn"
+                    class="w-full bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 px-4 rounded-xl transition-colors shadow-md active:scale-[0.98]">
+                    保存する
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast"
+        class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-gray-800/95 text-white px-5 py-3 rounded-full text-sm font-medium shadow-xl transition-all duration-300 opacity-0 pointer-events-none translate-y-4 z-[110] backdrop-blur-sm shadow-gray-900/20 whitespace-nowrap">
+        通知メッセージ
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
