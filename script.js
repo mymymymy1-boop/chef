@@ -218,20 +218,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function fetchGeminiRecipe(ingredients, mood) {
         const systemPrompt = `あなたは三橋家（代表取締役の三橋泰介、美人妻、5歳の息子の3人家族）の専属AIシェフです。
-以下のルールに必ず従って、最高の献立を1つ提案してください。
+以下のルールに必ず従って、最高の献立を**必ず3種類**提案してください。
 
 1. 正確性と品質を最重視すること。
 2. 5歳の子どもが喜ぶ要素（少し甘めの味付け、食べやすいサイズ感、見た目の楽しさなど）を隠し味や工夫として取り入れること。
 3. 指定された具材[${ingredients}]をできるだけ活用し、指定された気分[${mood}]に合致する料理にすること。不足している一般的な調味料や必須食材は適宜補ってよい。
-4. Markdownコードブロック(\`\`\`json)などを使わず、純粋なJSON文字列のみを出力すること。
+4. Markdownコードブロック(\`\`\`json)などを使わず、**3つの料理データを含む配列（Array）の純粋なJSON文字列のみ**を出力すること。
 
 必須出力JSONフォーマット:
-{
-  "dishName": "料理のタイトル（食欲をそそる魅力的な名前）",
-  "ingredients": ["材料1（分量）", "材料2（分量）", ...],
-  "steps": ["手順1", "手順2", "手順3", ...],
-  "imagePromptKeywords": "画像生成AI用の単語の羅列（英語）。例: delicious Japanese food, highly detailed, food photography, masterpiece, vibrant colors"
-}`;
+[
+  {
+    "dishName": "料理のタイトル（食欲をそそる魅力的な名前）",
+    "ingredients": ["材料1（分量）", "材料2（分量）", ...],
+    "steps": ["手順1", "手順2", "手順3", ...],
+    "imagePromptKeywords": "画像生成AI用の単語の羅列（英語）。例: delicious Japanese food, highly detailed, food photography, masterpiece, vibrant colors"
+  },
+  {
+    "dishName": "2つめの料理のタイトル",
+    ...
+  },
+  {
+    "dishName": "3つめの料理のタイトル",
+    ...
+  }
+]`;
 
         const requestBody = {
             contents: [{ parts: [{ text: systemPrompt }] }],
@@ -268,65 +278,86 @@ document.addEventListener('DOMContentLoaded', () => {
         textResponse = textResponse.replace(/```json/g, '').replace(/```/g, '').trim();
 
         try {
-            return JSON.parse(textResponse);
+            const parsed = JSON.parse(textResponse);
+            // Ensure it's always an array
+            return Array.isArray(parsed) ? parsed.slice(0, 3) : [parsed];
         } catch (e) {
             console.error("JSON Parse Error on text: ", textResponse);
             throw new Error('AIが回答の形式を間違えました。もう一度「今夜の夕食を考える！」を押してください。');
         }
     }
 
-    function renderRecipe(recipe) {
-        elements.resultBox.classList.remove('hidden');
+    function renderRecipe(recipes) {
+        const container = document.getElementById('recipesContainer');
+        const template = document.getElementById('recipeCardTemplate');
 
-        // Render Text Content
-        elements.recipeTitle.textContent = recipe.dishName;
+        // Hide the single old result box if it still exists in DOM state somehow
+        const oldResultBox = document.getElementById('resultBox');
+        if (oldResultBox) oldResultBox.classList.add('hidden');
 
-        elements.recipeIngredients.innerHTML = '';
-        recipe.ingredients.forEach(ing => {
-            const li = document.createElement('li');
-            li.textContent = ing;
-            elements.recipeIngredients.appendChild(li);
+        // Clear previous results
+        container.innerHTML = '';
+        container.classList.remove('hidden');
+
+        recipes.forEach((recipe, index) => {
+            const cardClone = template.content.cloneNode(true);
+            const cardHtml = cardClone.querySelector('.recipe-card');
+
+            // Set Rank Badge
+            const badge = cardClone.querySelector('.rank-badge');
+            badge.textContent = `候補 ${index + 1}`;
+
+            // Render Text Content
+            cardClone.querySelector('.recipeTitle').textContent = recipe.dishName;
+
+            const ingredientsList = cardClone.querySelector('.recipeIngredients');
+            recipe.ingredients.forEach(ing => {
+                const li = document.createElement('li');
+                li.textContent = ing;
+                ingredientsList.appendChild(li);
+            });
+
+            const stepsList = cardClone.querySelector('.recipeSteps');
+            recipe.steps.forEach(step => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span class="leading-relaxed">${step}</span>`;
+                li.className = 'pl-1 pb-2 border-b border-gray-100 last:border-0';
+                stepsList.appendChild(li);
+            });
+
+            // Handle Image
+            const recipeImageElem = cardClone.querySelector('.recipeImage');
+            const imageLoadingElem = cardClone.querySelector('.imageLoading');
+
+            // Prepare Pollinations image URL
+            const promptAdditions = ", professional food photography, 4k, masterpiece, highly detailed, appetizing, top down shot";
+            const encodedPrompt = encodeURIComponent(recipe.imagePromptKeywords + promptAdditions);
+
+            // Random seed to circumvent caching if same prompt is used
+            const seed = Math.floor(Math.random() * 1000000);
+            const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=600&nologo=true&seed=${seed}`;
+
+            // Create a new image object to load behind the scenes
+            const imgPreloader = new Image();
+            imgPreloader.onload = () => {
+                recipeImageElem.src = imageUrl;
+                imageLoadingElem.classList.add('hidden');
+                recipeImageElem.classList.remove('hidden');
+
+                // Force reflow then fade in
+                void recipeImageElem.offsetWidth;
+                recipeImageElem.classList.remove('opacity-0');
+                recipeImageElem.classList.add('opacity-100');
+            };
+
+            imgPreloader.onerror = () => {
+                imageLoadingElem.innerHTML = '<span class="text-xs text-red-400">画像の生成に失敗しました</span>';
+            };
+
+            imgPreloader.src = imageUrl;
+
+            // Append the finished clone to the container
+            container.appendChild(cardClone);
         });
-
-        elements.recipeSteps.innerHTML = '';
-        recipe.steps.forEach(step => {
-            const li = document.createElement('li');
-            li.innerHTML = `<span class="leading-relaxed">${step}</span>`;
-            li.className = 'pl-1 pb-2 border-b border-gray-100 last:border-0';
-            elements.recipeSteps.appendChild(li);
-        });
-
-        // Render Image
-        elements.recipeImage.classList.remove('opacity-100');
-        elements.recipeImage.classList.add('opacity-0', 'hidden');
-        elements.imageLoading.classList.remove('hidden');
-
-        // Prepare Pollinations image URL
-        // Append quality enhancers
-        const promptAdditions = ", professional food photography, 4k, masterpiece, highly detailed, appetizing, top down shot";
-        const encodedPrompt = encodeURIComponent(recipe.imagePromptKeywords + promptAdditions);
-
-        // Random seed to circumvent caching if same prompt is used
-        const seed = Math.floor(Math.random() * 1000000);
-        const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=600&nologo=true&seed=${seed}`;
-
-        // Create a new image object to load behind the scenes
-        const imgPreloader = new Image();
-        imgPreloader.onload = () => {
-            elements.recipeImage.src = imageUrl;
-            elements.imageLoading.classList.add('hidden');
-            elements.recipeImage.classList.remove('hidden');
-
-            // Force reflow then fade in
-            void elements.recipeImage.offsetWidth;
-            elements.recipeImage.classList.remove('opacity-0');
-            elements.recipeImage.classList.add('opacity-100');
-        };
-
-        imgPreloader.onerror = () => {
-            elements.imageLoading.innerHTML = '<span class="text-xs text-red-400">画像の生成に失敗しました</span>';
-        };
-
-        imgPreloader.src = imageUrl;
     }
 });

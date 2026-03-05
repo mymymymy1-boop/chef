@@ -103,44 +103,55 @@
                 <p class="text-xs text-gray-400">三橋家のシェフが腕を振るっています</p>
             </div>
 
-            <!-- Result Box -->
-            <div id="resultBox" class="hidden bg-white rounded-2xl shadow-xl overflow-hidden border border-orange-50">
-                <!-- Image Container -->
-                <div class="relative w-full h-64 bg-gray-100 flex items-center justify-center overflow-hidden group">
-                    <img id="recipeImage" src="" alt="Recipe Image"
-                        class="w-full h-full object-cover hidden transition-all duration-700 opacity-0 group-hover:scale-105">
-                    <div id="imageLoading"
-                        class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 gap-2">
-                        <i class="fas fa-camera text-4xl mb-2 animate-pulse text-orange-200"></i>
-                        <span class="text-xs font-medium text-gray-400">写真を生成中...</span>
-                    </div>
-                </div>
-
-                <!-- Recipe Content -->
-                <div class="p-6 flex flex-col gap-6">
-                    <h2 id="recipeTitle" class="text-2xl font-bold text-gray-800 leading-tight"></h2>
-
-                    <div class="bg-orange-50/50 rounded-xl p-4">
-                        <h3 class="flex items-center gap-2 text-orange-600 font-bold mb-3">
-                            <i class="fas fa-shopping-basket"></i> 材料
-                        </h3>
-                        <ul id="recipeIngredients"
-                            class="list-disc list-inside text-gray-700 text-sm flex flex-col gap-2 pl-1 marker:text-orange-400">
-                            <!-- Injected dynamically -->
-                        </ul>
-                    </div>
-
-                    <div class="px-2">
-                        <h3 class="flex items-center gap-2 text-orange-600 font-bold mb-3">
-                            <i class="fas fa-list-ol"></i> 手順
-                        </h3>
-                        <ol id="recipeSteps"
-                            class="list-decimal list-outside text-gray-700 text-sm flex flex-col gap-4 pl-5 marker:font-bold marker:text-orange-400">
-                            <!-- Injected dynamically -->
-                        </ol>
-                    </div>
-                </div>
+            <!-- Dynamic Result Container (Inject 3 recipes here) -->
+            <div id="recipesContainer" class="flex flex-col gap-8 w-full hidden">
             </div>
+
+            <!-- Hidden Template for Cloning -->
+            <template id="recipeCardTemplate">
+                <div class="recipe-card bg-white rounded-2xl shadow-xl overflow-hidden border border-orange-50">
+                    <!-- Image Container -->
+                    <div
+                        class="relative w-full h-64 bg-gray-100 flex items-center justify-center overflow-hidden group">
+                        <img class="recipeImage w-full h-full object-cover hidden transition-all duration-700 opacity-0 group-hover:scale-105"
+                            src="" alt="Recipe Image">
+                        <div
+                            class="imageLoading absolute inset-0 flex flex-col items-center justify-center text-gray-400 gap-2">
+                            <i class="fas fa-camera text-4xl mb-2 animate-pulse text-orange-200"></i>
+                            <span class="text-xs font-medium text-gray-400">写真を生成中...</span>
+                        </div>
+                        <div
+                            class="rank-badge absolute top-4 left-4 bg-orange-500 text-white font-bold py-1 px-3 rounded-full shadow-md text-sm">
+                            候補 1
+                        </div>
+                    </div>
+
+                    <!-- Recipe Content -->
+                    <div class="p-6 flex flex-col gap-6">
+                        <h2 class="recipeTitle text-2xl font-bold text-gray-800 leading-tight"></h2>
+
+                        <div class="bg-orange-50/50 rounded-xl p-4">
+                            <h3 class="flex items-center gap-2 text-orange-600 font-bold mb-3">
+                                <i class="fas fa-shopping-basket"></i> 材料
+                            </h3>
+                            <ul
+                                class="recipeIngredients list-disc list-inside text-gray-700 text-sm flex flex-col gap-2 pl-1 marker:text-orange-400">
+                                <!-- Injected dynamically -->
+                            </ul>
+                        </div>
+
+                        <div class="px-2">
+                            <h3 class="flex items-center gap-2 text-orange-600 font-bold mb-3">
+                                <i class="fas fa-list-ol"></i> 手順
+                            </h3>
+                            <ol
+                                class="recipeSteps list-decimal list-outside text-gray-700 text-sm flex flex-col gap-4 pl-5 marker:font-bold marker:text-orange-400">
+                                <!-- Injected dynamically -->
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </template>
         </section>
     </main>
 
