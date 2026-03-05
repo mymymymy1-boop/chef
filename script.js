@@ -252,8 +252,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error?.message || '通信エラーが発生しました。API Keyを確認してください。');
+            let errorMsg = '通信エラーが発生しました。API Keyやネットワークを確認してください。';
+            try {
+                const errorData = await response.json();
+                console.error("Gemini API Error Response:", errorData);
+                errorMsg = errorData.error?.message || errorMsg;
+                if (errorData.error?.status === 'INVALID_ARGUMENT') {
+                    errorMsg = 'API Keyが無効です。設定から正しいキーを入力し直してください。';
+                }
+            } catch (e) {
+                console.error("Could not parse error response", e);
+            }
+            throw new Error(errorMsg);
         }
 
         const data = await response.json();
