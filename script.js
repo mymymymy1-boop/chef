@@ -1,3 +1,8 @@
+window.onerror = function (msg, url, lineNo, columnNo, error) {
+    alert('DEBUG ERROR: ' + msg + '\nLine: ' + lineNo);
+    return false;
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     // UI Elements
     const elements = {
@@ -270,14 +275,17 @@ document.addEventListener('DOMContentLoaded', () => {
         let textResponse = data.candidates[0].content.parts[0].text;
 
         // Sanitize response just in case markdown blocks are returned despite responseMimeType
-        textResponse = textResponse.replace(/```json/g, '').replace(/```/g, '').trim();
+        textResponse = textResponse.replace(/^```json\s*/, '').replace(/```\s*$/, '').trim();
 
         try {
-            const parsed = JSON.parse(textResponse);
-            // Ensure it's always an array
+            // Further sanitize any trailing commas or unescaped characters before parsing
+            const cleanText = textResponse.replace(/,\s*([\]}])/g, '$1');
+            const parsed = JSON.parse(cleanText);
             return Array.isArray(parsed) ? parsed.slice(0, 3) : [parsed];
         } catch (e) {
             console.error("JSON Parse Error on text: ", textResponse);
+            console.error("Error Details:", e);
+            alert("AIが不正な形式を返しました。エラー詳細: " + e.message + "\n\n(OKを押して再試行してください)");
             throw new Error('AIが回答の形式を間違えました。もう一度「今夜の夕食を考える！」を押してください。');
         }
     }
@@ -295,9 +303,10 @@ document.addEventListener('DOMContentLoaded', () => {
         container.classList.remove('hidden');
 
         recipes.forEach((recipe, index) => {
-            // Pollinations is currently down (530 error). Using beautiful food-related placeholders via Picsum instead.
-            const seed = Math.floor(Math.random() * 1000) + 10; // Avoid 1-9 as they might be less relevant looking
-            const imageUrl = `https://picsum.photos/seed/${seed}/800/600`;
+            // Pollinations is currently down (530 error). Using beautiful food-related placeholders via LoremFlickr instead.
+            // Using a specific food query and a random number to avoid exact duplicates
+            const seed = Math.floor(Math.random() * 1000) + 1;
+            const imageUrl = `https://loremflickr.com/800/600/food?lock=${seed}`;
 
             const ingredientsHtml = recipe.ingredients.map(ing => `<li>${ing}</li>`).join('');
             const stepsHtml = recipe.steps.map(step => `<li class="pl-1 pb-2 border-b border-gray-100 last:border-0"><span class="leading-relaxed">${step}</span></li>`).join('');
@@ -338,8 +347,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Append HTML as a new div wrapper
             const wrapper = document.createElement('div');
+            wrapper.className = 'w-full';
             wrapper.innerHTML = cardHtml;
-            container.appendChild(wrapper.firstElementChild);
+            container.appendChild(wrapper);
 
             // Handle Image loading visually
             const newCard = container.lastElementChild;
