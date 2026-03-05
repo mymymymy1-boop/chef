@@ -233,7 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
   "imagePromptKeywords": "画像生成AI用の単語の羅列（英語）。例: delicious Japanese food, highly detailed, food photography, masterpiece, vibrant colors"
 }`;
 
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${state.apiKey}`;
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${state.apiKey}`;
 
         const requestBody = {
             contents: [{
