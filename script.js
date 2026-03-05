@@ -14,12 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
         toast: document.getElementById('toast'),
         outputSection: document.getElementById('outputSection'),
         loadingIndicator: document.getElementById('loadingIndicator'),
-        resultBox: document.getElementById('resultBox'),
-        recipeImage: document.getElementById('recipeImage'),
-        imageLoading: document.getElementById('imageLoading'),
-        recipeTitle: document.getElementById('recipeTitle'),
-        recipeIngredients: document.getElementById('recipeIngredients'),
-        recipeSteps: document.getElementById('recipeSteps')
+        recipesContainer: document.getElementById('recipesContainer')
     };
 
     // State
@@ -194,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.outputSection.classList.remove('hidden');
         elements.loadingIndicator.classList.remove('hidden');
         elements.loadingIndicator.classList.add('flex');
-        elements.resultBox.classList.add('hidden');
+        elements.recipesContainer.classList.add('hidden');
         elements.generateBtn.disabled = true;
 
         // Scroll to output gracefully
@@ -300,64 +295,69 @@ document.addEventListener('DOMContentLoaded', () => {
         container.classList.remove('hidden');
 
         recipes.forEach((recipe, index) => {
-            const cardClone = template.content.cloneNode(true);
-            const cardHtml = cardClone.querySelector('.recipe-card');
+            // Pollinations is currently down (530 error). Using beautiful food-related placeholders via Picsum instead.
+            const seed = Math.floor(Math.random() * 1000) + 10; // Avoid 1-9 as they might be less relevant looking
+            const imageUrl = `https://picsum.photos/seed/${seed}/800/600`;
 
-            // Set Rank Badge
-            const badge = cardClone.querySelector('.rank-badge');
-            badge.textContent = `候補 ${index + 1}`;
+            const ingredientsHtml = recipe.ingredients.map(ing => `<li>${ing}</li>`).join('');
+            const stepsHtml = recipe.steps.map(step => `<li class="pl-1 pb-2 border-b border-gray-100 last:border-0"><span class="leading-relaxed">${step}</span></li>`).join('');
 
-            // Render Text Content
-            cardClone.querySelector('.recipeTitle').textContent = recipe.dishName;
+            const cardHtml = `
+                <div class="recipe-card bg-white rounded-2xl shadow-xl overflow-hidden border border-orange-50 mb-8">
+                    <div class="relative w-full h-64 bg-gray-100 flex items-center justify-center overflow-hidden group">
+                        <img class="recipeImage w-full h-full object-cover hidden transition-all duration-700 opacity-0 group-hover:scale-105" src="${imageUrl}" alt="Recipe Image">
+                        <div class="imageLoading absolute inset-0 flex flex-col items-center justify-center text-gray-400 gap-2">
+                            <i class="fas fa-camera text-4xl mb-2 animate-pulse text-orange-200"></i>
+                            <span class="text-xs font-medium text-gray-400">写真を生成中...</span>
+                        </div>
+                        <div class="absolute top-4 left-4 bg-orange-500 text-white font-bold py-1 px-3 rounded-full shadow-md text-sm">
+                            候補 ${index + 1}
+                        </div>
+                    </div>
+                    <div class="p-6 flex flex-col gap-6">
+                        <h2 class="text-2xl font-bold text-gray-800 leading-tight">${recipe.dishName}</h2>
+                        <div class="bg-orange-50/50 rounded-xl p-4">
+                            <h3 class="flex items-center gap-2 text-orange-600 font-bold mb-3">
+                                <i class="fas fa-shopping-basket"></i> 材料
+                            </h3>
+                            <ul class="list-disc list-inside text-gray-700 text-sm flex flex-col gap-2 pl-1 marker:text-orange-400">
+                                ${ingredientsHtml}
+                            </ul>
+                        </div>
+                        <div class="px-2">
+                            <h3 class="flex items-center gap-2 text-orange-600 font-bold mb-3">
+                                <i class="fas fa-list-ol"></i> 手順
+                            </h3>
+                            <ol class="list-decimal list-outside text-gray-700 text-sm flex flex-col gap-4 pl-5 marker:font-bold marker:text-orange-400">
+                                ${stepsHtml}
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            `;
 
-            const ingredientsList = cardClone.querySelector('.recipeIngredients');
-            recipe.ingredients.forEach(ing => {
-                const li = document.createElement('li');
-                li.textContent = ing;
-                ingredientsList.appendChild(li);
-            });
+            // Append HTML as a new div wrapper
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = cardHtml;
+            container.appendChild(wrapper.firstElementChild);
 
-            const stepsList = cardClone.querySelector('.recipeSteps');
-            recipe.steps.forEach(step => {
-                const li = document.createElement('li');
-                li.innerHTML = `<span class="leading-relaxed">${step}</span>`;
-                li.className = 'pl-1 pb-2 border-b border-gray-100 last:border-0';
-                stepsList.appendChild(li);
-            });
+            // Handle Image loading visually
+            const newCard = container.lastElementChild;
+            const recipeImageElem = newCard.querySelector('.recipeImage');
+            const imageLoadingElem = newCard.querySelector('.imageLoading');
 
-            // Handle Image
-            const recipeImageElem = cardClone.querySelector('.recipeImage');
-            const imageLoadingElem = cardClone.querySelector('.imageLoading');
-
-            // Prepare Pollinations image URL
-            const promptAdditions = ", professional food photography, 4k, masterpiece, highly detailed, appetizing, top down shot";
-            const encodedPrompt = encodeURIComponent(recipe.imagePromptKeywords + promptAdditions);
-
-            // Random seed to circumvent caching if same prompt is used
-            const seed = Math.floor(Math.random() * 1000000);
-            const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=600&nologo=true&seed=${seed}`;
-
-            // Create a new image object to load behind the scenes
             const imgPreloader = new Image();
             imgPreloader.onload = () => {
-                recipeImageElem.src = imageUrl;
                 imageLoadingElem.classList.add('hidden');
                 recipeImageElem.classList.remove('hidden');
-
-                // Force reflow then fade in
                 void recipeImageElem.offsetWidth;
                 recipeImageElem.classList.remove('opacity-0');
                 recipeImageElem.classList.add('opacity-100');
             };
-
             imgPreloader.onerror = () => {
                 imageLoadingElem.innerHTML = '<span class="text-xs text-red-400">画像の生成に失敗しました</span>';
             };
-
             imgPreloader.src = imageUrl;
-
-            // Append the finished clone to the container
-            container.appendChild(cardClone);
         });
     }
 });
